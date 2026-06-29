@@ -32,6 +32,16 @@ def get_system_prompt(question: str) -> str:
     ]):
         print("Selected Agent: Interview")
         return AGENTS["interview"]
+        # Skill Gap Agent
+    if any(word in question for word in [
+        "skill gap",
+        "skills",
+        "missing skills",
+        "analyze my skills",
+        "skill analysis"
+    ]):
+        print("Selected Agent: Skill Gap")
+        return AGENTS["skillgap"]
 
     # Default
     print("Selected Agent: Career")
