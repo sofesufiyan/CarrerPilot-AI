@@ -2,7 +2,7 @@ from fastapi import APIRouter, UploadFile, File
 import os
 
 from app.models.schemas import CareerRequest, CareerResponse
-from app.services.career_service import get_career_advice
+from app.services.career_service import get_career_advice, review_resume
 from app.services.pdf_service import extract_text_from_pdf
 
 router = APIRouter()
@@ -35,7 +35,9 @@ async def resume_upload(file: UploadFile = File(...)):
     os.remove(temp_path)
 
     # Return extracted text (first 1000 characters for testing)
+    analysis = review_resume(text)
+
     return {
-        "filename": file.filename,
-        "text": text[:1000]
-    }
+    "filename": file.filename,
+    "analysis": analysis
+}
