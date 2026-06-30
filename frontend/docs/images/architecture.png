@@ -1,0 +1,23 @@
+                    🚀 CareerPilot AI
+
+                 React Frontend (Vite)
+                          │
+                          ▼
+                 FastAPI Backend API
+                          │
+                          ▼
+                Agent Orchestrator
+                          │
+      ┌──────────┬──────────┬──────────┬──────────┐
+      │          │          │          │
+ Career     Resume     Interview   Skill Gap
+ Agent       Agent        Agent       Agent
+      │          │          │          │
+      └──────────┴──────────┴──────────┘
+                    │
+            Shared Tool Layer
+     ┌─────────┬──────────┬────────────┐
+     │         │          │
+ Gemini    PDF Tool   Memory Tool
+     │
+ Google Gemini API

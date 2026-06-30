@@ -1,33 +1,32 @@
+from app.agents.orchestrator import prepare_prompt
 from app.router.router import get_system_prompt
-from google import genai
-from app.core.config import GEMINI_API_KEY
+from app.tools.gemini_tool import ask_gemini
+from app.tools.agent_logger import add, clear
 import concurrent.futures
-
-client = genai.Client(api_key=GEMINI_API_KEY)
 
 
 def get_career_advice(question: str) -> str:
-    system_prompt = get_system_prompt(question)
+    clear()
 
-    prompt = f"""
-{system_prompt}
+    add("📥 User Question Received")
 
-Student Question:
-
-{question}
-"""
+    prompt = prepare_prompt(question)
 
     try:
         with concurrent.futures.ThreadPoolExecutor() as executor:
+
+            add("🚀 Sending Prompt to Gemini Tool")
+
             future = executor.submit(
-                client.models.generate_content,
-                model="gemini-2.5-flash",
-                contents=prompt,
+                ask_gemini,
+                prompt,
             )
 
             response = future.result(timeout=20)
 
-        return response.text
+            add("✅ Response Generated")
+
+        return response
 
     except concurrent.futures.TimeoutError:
         return (
@@ -48,6 +47,11 @@ Student Question:
 
 
 def review_resume(resume_text: str) -> str:
+    clear()
+
+    add("📄 Resume Uploaded")
+    add("🧠 Resume Agent Selected")
+
     system_prompt = get_system_prompt("review my resume")
 
     prompt = f"""
@@ -67,15 +71,19 @@ IMPORTANT:
 
     try:
         with concurrent.futures.ThreadPoolExecutor() as executor:
+
+            add("🚀 Sending Resume to Gemini Tool")
+
             future = executor.submit(
-                client.models.generate_content,
-                model="gemini-2.5-flash",
-                contents=prompt,
+                ask_gemini,
+                prompt,
             )
 
             response = future.result(timeout=20)
 
-        return response.text
+            add("✅ Resume Analysis Completed")
+
+        return response
 
     except concurrent.futures.TimeoutError:
         return (

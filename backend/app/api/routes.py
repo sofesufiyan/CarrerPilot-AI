@@ -4,6 +4,7 @@ import os
 from app.models.schemas import CareerRequest, CareerResponse
 from app.services.career_service import get_career_advice, review_resume
 from app.services.pdf_service import extract_text_from_pdf
+from app.tools.agent_logger import get_logs
 
 router = APIRouter()
 
@@ -41,3 +42,11 @@ async def resume_upload(file: UploadFile = File(...)):
     "filename": file.filename,
     "analysis": analysis
 }
+# -------------------------------
+# Agent Logs Endpoint
+# -------------------------------
+@router.get("/agent-logs")
+def agent_logs():
+    return {
+        "logs": get_logs()
+    }

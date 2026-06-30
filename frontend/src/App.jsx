@@ -9,6 +9,19 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [resumeAnalysis, setResumeAnalysis] = useState("");
 
+  const [agentLogs, setAgentLogs] = useState([]);
+
+  const loadAgentLogs = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/agent-logs");
+      const data = await response.json();
+
+      setAgentLogs(data.logs || []);
+    } catch (error) {
+      console.log("Unable to load agent logs.");
+    }
+  };
+
   const askAI = async (customQuestion = null) => {
     const finalQuestion = customQuestion || question;
 
@@ -28,7 +41,10 @@ function App() {
       });
 
       const data = await response.json();
+
       setAnswer(data.answer);
+
+      await loadAgentLogs();
     } catch (error) {
       setAnswer("Unable to connect to backend.");
     }
@@ -54,7 +70,10 @@ function App() {
       });
 
       const data = await response.json();
+
       setResumeAnalysis(data.analysis);
+
+      await loadAgentLogs();
     } catch (error) {
       setResumeAnalysis("Unable to upload resume.");
     }
@@ -64,7 +83,7 @@ function App() {
 
   return (
     <div className="app">
-      {/* Hero Section */}
+
       <div className="hero">
         <h1>🚀 CareerPilot AI</h1>
 
@@ -73,7 +92,6 @@ function App() {
         <p>Learn • Build Skills • Crack Interviews • Get Hired</p>
       </div>
 
-      {/* Question Box */}
       <textarea
         rows="5"
         placeholder="Ask anything about your career..."
@@ -81,8 +99,8 @@ function App() {
         onChange={(e) => setQuestion(e.target.value)}
       />
 
-      {/* Feature Cards */}
       <div className="feature-grid">
+
         <div
           className="feature-card"
           onClick={() => {
@@ -132,6 +150,7 @@ function App() {
           <h3>📊 Skills Advisor</h3>
           <p>Discover your strengths and missing skills.</p>
         </div>
+
       </div>
 
       <div style={{ textAlign: "center", marginTop: "20px" }}>
@@ -140,7 +159,6 @@ function App() {
         </button>
       </div>
 
-      {/* Resume Upload */}
       <div className="upload-card">
         <h2>📄 Resume Expert</h2>
 
@@ -158,14 +176,22 @@ function App() {
         </button>
       </div>
 
-      {/* Loading */}
       {loading && (
         <div className="loading">
           🤖 CareerPilot AI is thinking...
         </div>
       )}
 
-      {/* AI Response */}
+      {!loading && agentLogs.length > 0 && (
+        <div className="card">
+          <h3>🤖 Agent Activity</h3>
+
+          {agentLogs.map((log, index) => (
+            <p key={index}>{log}</p>
+          ))}
+        </div>
+      )}
+
       {!loading && answer && (
         <div className="card">
           <h3>🤖 AI Response</h3>
@@ -174,7 +200,6 @@ function App() {
         </div>
       )}
 
-      {/* Resume Response */}
       {!loading && resumeAnalysis && (
         <div className="card">
           <h3>📄 Resume Analysis</h3>
@@ -182,6 +207,7 @@ function App() {
           <p>{resumeAnalysis}</p>
         </div>
       )}
+
     </div>
   );
 }
