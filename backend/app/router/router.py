@@ -2,47 +2,70 @@ from app.agents.agent_manager import AGENTS
 
 
 def get_system_prompt(question: str) -> str:
-    question = question.lower()
+    question = question.lower().strip()
 
-    # Resume Agent
+    # ==========================
+    # Resume Expert
+    # ==========================
     if any(word in question for word in [
         "resume",
         "cv",
-        "ats"
+        "ats",
+        "resume review",
+        "improve resume",
+        "resume analysis"
     ]):
-        print("Selected Agent: Resume")
+        print("📄 Selected Agent: Resume Expert")
         return AGENTS["resume"]
 
-    # Roadmap Agent
+    # ==========================
+    # Learning Planner
+    # ==========================
     if any(word in question for word in [
         "roadmap",
         "plan",
         "learning path",
-        "study plan"
+        "study plan",
+        "learning roadmap",
+        "career roadmap",
+        "how to learn",
+        "how should i start"
     ]):
-        print("Selected Agent: Roadmap")
+        print("🗺️ Selected Agent: Learning Planner")
         return AGENTS["roadmap"]
-        # Interview Agent
+
+    # ==========================
+    # Interview Coach
+    # ==========================
     if any(word in question for word in [
         "interview",
         "mock interview",
-        "hr interview",
         "technical interview",
-        "interview questions"
+        "hr interview",
+        "placement",
+        "interview questions",
+        "prepare for interview"
     ]):
-        print("Selected Agent: Interview")
+        print("🎤 Selected Agent: Interview Coach")
         return AGENTS["interview"]
-        # Skill Gap Agent
+
+    # ==========================
+    # Skills Advisor
+    # ==========================
     if any(word in question for word in [
         "skill gap",
         "skills",
         "missing skills",
+        "skill analysis",
         "analyze my skills",
-        "skill analysis"
+        "improve my skills",
+        "what skills"
     ]):
-        print("Selected Agent: Skill Gap")
+        print("📊 Selected Agent: Skills Advisor")
         return AGENTS["skillgap"]
 
-    # Default
-    print("Selected Agent: Career")
+    # ==========================
+    # Career Mentor (Default)
+    # ==========================
+    print("🚀 Selected Agent: Career Mentor")
     return AGENTS["career"]

@@ -33,31 +33,16 @@ def review_resume(resume_text: str) -> str:
     prompt = f"""
 {system_prompt}
 
-The following is the student's resume.
-
-Review it professionally.
-
-Give the response in this format:
-
-# Resume Analysis
-
-## Overall Score (0-100)
-
-## Strengths
-
-## Weaknesses
-
-## Missing Skills
-
-## ATS Improvements
-
-## Suggested Projects
-
-## Final Advice
-
-Resume:
+Student Resume:
 
 {resume_text}
+
+IMPORTANT:
+
+• Keep the response under 350 words.
+• Focus only on the most important improvements.
+• Give practical and concise advice.
+• Do NOT repeat information.
 """
 
     try:
