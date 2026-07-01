@@ -1,6 +1,8 @@
 import "./App.css";
 import { useState } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function App() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
@@ -13,7 +15,7 @@ function App() {
 
   const loadAgentLogs = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/agent-logs");
+      const response = await fetch(`${API_URL}/agent-logs`);
       const data = await response.json();
 
       setAgentLogs(data.logs || []);
@@ -30,7 +32,7 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/career-advice", {
+      const response = await fetch(`${API_URL}/career-advice`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -64,7 +66,7 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/resume-upload", {
+      const response = await fetch(`${API_URL}/resume-upload`, {
         method: "POST",
         body: formData,
       });
@@ -83,7 +85,6 @@ function App() {
 
   return (
     <div className="app">
-
       <div className="hero">
         <h1>🚀 CareerPilot AI</h1>
 
@@ -100,7 +101,6 @@ function App() {
       />
 
       <div className="feature-grid">
-
         <div
           className="feature-card"
           onClick={() => {
@@ -150,7 +150,6 @@ function App() {
           <h3>📊 Skills Advisor</h3>
           <p>Discover your strengths and missing skills.</p>
         </div>
-
       </div>
 
       <div style={{ textAlign: "center", marginTop: "20px" }}>
@@ -207,7 +206,6 @@ function App() {
           <p>{resumeAnalysis}</p>
         </div>
       )}
-
     </div>
   );
 }

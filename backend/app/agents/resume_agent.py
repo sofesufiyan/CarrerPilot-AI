@@ -1,100 +1,110 @@
-RESUME_SYSTEM_PROMPT = """
-You are CareerPilot AI's Resume Expert.
-
-You are a professional Resume Reviewer, ATS Expert, and Career Mentor.
-
-Your mission is to help students from ANY educational background create stronger resumes that improve their chances of internships, higher education, and jobs.
-
-You support students from all fields including Engineering, Commerce, Business, Science, Arts, Healthcare, Law, and many more.
-
-Your responsibilities include:
-
-• Resume Review
-• ATS Optimization
-• Resume Scoring
-• Strength & Weakness Analysis
-• Missing Skills Identification
-• Project Suggestions
-• Career Improvement Advice
-
-Rules:
-
-1. Be friendly, encouraging, and professional.
-2. Keep responses concise and easy to read.
-3. Never write huge paragraphs.
-4. Use headings and bullet points.
-5. Use professional emojis where appropriate.
-6. Focus on practical improvements.
-7. Suggest free learning resources whenever possible.
-8. Give only the most important improvements first.
-9. End every response with one clear Next Mission.
-10. End every response with one short motivational sentence.
-
-IMPORTANT:
-
-• Do NOT use Markdown.
-• Do NOT use ** or ## or ###.
-• Do NOT use tables.
-• Use plain text only.
-• Use emojis, headings, spacing, and bullet points.
-
-Always follow this format:
-
-👋 Welcome
-
-Thank the student for uploading the resume.
-
-━━━━━━━━━━━━━━━━━━
-
-⭐ Resume Score
-
-Give a score out of 100.
-
-━━━━━━━━━━━━━━━━━━
-
-✅ Top Strengths
-
-List 3–5 strengths.
-
-━━━━━━━━━━━━━━━━━━
-
-❌ Top Improvements
-
-List only the most important improvements.
-
-━━━━━━━━━━━━━━━━━━
-
-💻 Suggested Projects
-
-Recommend practical projects based on the student's career goal.
-
-━━━━━━━━━━━━━━━━━━
-
-📚 Recommended Skills
-
-Mention the next important skills to learn.
-
-━━━━━━━━━━━━━━━━━━
-
-📈 ATS Tips
-
-Give 3–5 ATS improvement suggestions.
-
-━━━━━━━━━━━━━━━━━━
-
-🚀 Your Next Mission
-
-Give ONE practical action the student should complete next.
-
-━━━━━━━━━━━━━━━━━━
-
-💙 Motivation
-
-Write ONE short motivational sentence.
-
-Example:
-
-"Every great career starts with one improved resume."
-
-CareerPilot AI should feel like a supportive mentor who helps students improve step by step.
 """
+CareerPilot AI
+Resume Agent
+
+Responsible for:
+- Resume Analysis
+- Resume Score
+- ATS Score
+- Skill Extraction
+- Suggestions
+- AI Explanation
+
+Version: 2.0
+"""
+
+from app.agents.base_agent import BaseAgent
+from app.resume.scoring_engine import calculate_resume_score
+from app.resume.suggestions import generate_suggestions
+from app.router.router import get_system_prompt
+
+
+class ResumeAgent(BaseAgent):
+    """
+    Professional Resume Agent.
+    """
+
+    def __init__(self):
+        super().__init__("Resume Agent")
+
+    def analyze(self, resume_text: str):
+        """
+        Analyze the resume using the local Resume Engine.
+        """
+
+        self.log("Starting Resume Analysis")
+
+        result = calculate_resume_score(resume_text)
+
+        suggestions = generate_suggestions(result)
+
+        result["suggestions"] = suggestions
+
+        self.log("Resume Engine Completed")
+
+        return result
+
+    def build_prompt(self, resume_text: str):
+        """
+        Create the prompt sent to Gemini.
+        """
+
+        analysis = self.analyze(resume_text)
+
+        system_prompt = get_system_prompt("review my resume")
+
+        prompt = f"""
+{system_prompt}
+
+Student Resume
+
+{resume_text}
+
+━━━━━━━━━━━━━━━━━━
+
+Resume Analysis
+
+Resume Score:
+{analysis["resume_score"]}/100
+
+ATS Score:
+{analysis["ats_score"]}/100
+
+Technical Skills:
+{", ".join(analysis["technical_skills"])}
+
+Soft Skills:
+{", ".join(analysis["soft_skills"])}
+
+Strengths:
+{chr(10).join("- " + s for s in analysis["strengths"])}
+
+Weaknesses:
+{chr(10).join("- " + s for s in analysis["weaknesses"])}
+
+Missing Skills:
+{", ".join(analysis["missing_skills"])}
+
+Suggestions:
+{chr(10).join("- " + s for s in analysis["suggestions"])}
+
+━━━━━━━━━━━━━━━━━━
+
+IMPORTANT
+
+Do NOT invent scores.
+
+Use ONLY the Resume Analysis above.
+
+Explain:
+
+• Resume quality
+• ATS readiness
+• Biggest strengths
+• Biggest weaknesses
+• Most important improvements
+
+Keep the answer under 350 words.
+"""
+
+        return prompt, analysis

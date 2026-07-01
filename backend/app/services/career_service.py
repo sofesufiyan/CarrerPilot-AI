@@ -1,10 +1,13 @@
 from app.agents.orchestrator import prepare_prompt
-from app.router.router import get_system_prompt
+from app.agents.resume_agent import ResumeAgent
 from app.tools.gemini_tool import ask_gemini
 from app.tools.agent_logger import add, clear
 import concurrent.futures
 
 
+# -------------------------------------
+# Career Advice
+# -------------------------------------
 def get_career_advice(question: str) -> str:
     clear()
 
@@ -15,7 +18,7 @@ def get_career_advice(question: str) -> str:
     try:
         with concurrent.futures.ThreadPoolExecutor() as executor:
 
-            add("🚀 Sending Prompt to Gemini Tool")
+            add("🚀 Sending Prompt to Gemini")
 
             future = executor.submit(
                 ask_gemini,
@@ -24,7 +27,7 @@ def get_career_advice(question: str) -> str:
 
             response = future.result(timeout=20)
 
-            add("✅ Response Generated")
+            add("✅ Career Response Generated")
 
         return response
 
@@ -39,65 +42,75 @@ def get_career_advice(question: str) -> str:
 
         if "429" in error or "RESOURCE_EXHAUSTED" in error:
             return (
-                "⚠️ CareerPilot AI has reached the current Gemini API free quota.\n\n"
-                "Please wait a few minutes and try again."
+                "⚠️ Gemini API quota exceeded.\n\n"
+                "Please try again later."
             )
 
         return f"⚠️ Error: {error}"
 
 
-def review_resume(resume_text: str) -> str:
+# -------------------------------------
+# Resume Review
+# -------------------------------------
+def review_resume(resume_text: str):
+
     clear()
 
     add("📄 Resume Uploaded")
-    add("🧠 Resume Agent Selected")
 
-    system_prompt = get_system_prompt("review my resume")
+    agent = ResumeAgent()
 
-    prompt = f"""
-{system_prompt}
+    add("🧠 Resume Agent Started")
 
-Student Resume:
+    # Resume Engine Analysis
+    analysis = agent.analyze(resume_text)
 
-{resume_text}
-
-IMPORTANT:
-
-• Keep the response under 350 words.
-• Focus only on the most important improvements.
-• Give practical and concise advice.
-• Do NOT repeat information.
-"""
+    # Gemini Prompt
+    prompt, _ = agent.build_prompt(resume_text)
 
     try:
+
         with concurrent.futures.ThreadPoolExecutor() as executor:
 
-            add("🚀 Sending Resume to Gemini Tool")
+            add("🚀 Sending Resume Analysis to Gemini")
 
             future = executor.submit(
                 ask_gemini,
                 prompt,
             )
 
-            response = future.result(timeout=20)
+            ai_response = future.result(timeout=20)
 
-            add("✅ Resume Analysis Completed")
+            add("✅ Resume Review Completed")
 
-        return response
+        return {
+            "resume_score": analysis["resume_score"],
+            "ats_score": analysis["ats_score"],
+            "technical_skills": analysis["technical_skills"],
+            "soft_skills": analysis["soft_skills"],
+            "strengths": analysis["strengths"],
+            "weaknesses": analysis["weaknesses"],
+            "missing_skills": analysis["missing_skills"],
+            "suggestions": analysis["suggestions"],
+            "ai_explanation": ai_response,
+        }
 
     except concurrent.futures.TimeoutError:
-        return (
-            "⏳ Resume analysis is taking longer than expected.\n\n"
-            "Please try again in a few moments."
-        )
+
+        return {
+            "error": "Resume analysis timed out."
+        }
 
     except Exception as e:
+
         error = str(e)
 
         if "429" in error or "RESOURCE_EXHAUSTED" in error:
-            return (
-                "⚠️ CareerPilot AI has reached the current Gemini API free quota.\n\n"
-                "Please wait a few minutes and try again."
-            )
 
-        return f"⚠️ Error: {error}"
+            return {
+                "error": "Gemini API quota exceeded."
+            }
+
+        return {
+            "error": error
+        }
