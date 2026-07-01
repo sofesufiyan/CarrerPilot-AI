@@ -1,7 +1,30 @@
 import "./App.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL;
+
+const QUICK_ACTIONS = [
+  {
+    title: "🗺️ Learning Planner",
+    description: "Create your personalized AI learning roadmap.",
+    prompt: "Create a detailed 12-month roadmap to become an AI Engineer with monthly milestones, projects, and interview preparation.",
+  },
+  {
+    title: "📄 Resume Expert",
+    description: "Improve your resume and ATS score.",
+    prompt: "Review my resume for an AI Engineer role and provide ATS improvements, missing skills, and recommendations.",
+  },
+  {
+    title: "🎤 Interview Coach",
+    description: "Practice HR and technical interviews.",
+    prompt: "Conduct a mock AI Engineer interview. Ask one question at a time and evaluate each answer.",
+  },
+  {
+    title: "📊 Skill Gap Analyzer",
+    description: "Identify strengths and missing skills.",
+    prompt: "Analyze my skills for an AI Engineer role and identify my technical and soft skill gaps with a learning plan.",
+  },
+];
 
 function App() {
   const [question, setQuestion] = useState("");
@@ -13,23 +36,31 @@ function App() {
 
   const [agentLogs, setAgentLogs] = useState([]);
 
+  useEffect(() => {
+    loadAgentLogs();
+  }, []);
+
   const loadAgentLogs = async () => {
     try {
       const response = await fetch(`${API_URL}/agent-logs`);
+
+      if (!response.ok) return;
+
       const data = await response.json();
 
-      setAgentLogs(data.logs || []);
+      setAgentLogs(Array.isArray(data.logs) ? data.logs : []);
     } catch (error) {
-      console.log("Unable to load agent logs.");
+      console.error(error);
     }
   };
 
   const askAI = async (customQuestion = null) => {
-    const finalQuestion = customQuestion || question;
+    const finalQuestion = (customQuestion || question).trim();
 
     if (!finalQuestion) return;
 
     setLoading(true);
+    setAnswer("");
 
     try {
       const response = await fetch(`${API_URL}/career-advice`, {
@@ -44,14 +75,17 @@ function App() {
 
       const data = await response.json();
 
-      setAnswer(data.answer);
+      setAnswer(
+        data.answer || data.response || "No response received from CareerPilot AI."
+      );
 
       await loadAgentLogs();
     } catch (error) {
-      setAnswer("Unable to connect to backend.");
+      console.error(error);
+      setAnswer("Unable to connect to the backend.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const uploadResume = async () => {
@@ -64,6 +98,7 @@ function App() {
     formData.append("file", selectedFile);
 
     setLoading(true);
+    setResumeAnalysis("");
 
     try {
       const response = await fetch(`${API_URL}/resume-upload`, {
@@ -73,87 +108,54 @@ function App() {
 
       const data = await response.json();
 
-      setResumeAnalysis(data.analysis);
+      setResumeAnalysis(
+        data.analysis || data.result || "Resume analyzed successfully."
+      );
 
       await loadAgentLogs();
     } catch (error) {
+      console.error(error);
       setResumeAnalysis("Unable to upload resume.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
     <div className="app">
-      <div className="hero">
+      <section className="hero">
         <h1>🚀 CareerPilot AI</h1>
 
         <p>Your Personal AI Career Mentor</p>
 
         <p>Learn • Build Skills • Crack Interviews • Get Hired</p>
-      </div>
+      </section>
 
       <textarea
-        rows="5"
-        placeholder="Ask anything about your career..."
+        rows={5}
+        placeholder="Ask CareerPilot AI anything about your career..."
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
       />
 
       <div className="feature-grid">
-        <div
-          className="feature-card"
-          onClick={() => {
-            const q = "Create a 12-month AI Engineer roadmap.";
-            setQuestion(q);
-            askAI(q);
-          }}
-        >
-          <h3>🗺️ Learning Planner</h3>
-          <p>Create your personalized learning roadmap.</p>
-        </div>
-
-        <div
-          className="feature-card"
-          onClick={() => {
-            const q = "Review my resume for an AI Engineer role.";
-            setQuestion(q);
-            askAI(q);
-          }}
-        >
-          <h3>📄 Resume Expert</h3>
-          <p>Improve your resume and ATS score.</p>
-        </div>
-
-        <div
-          className="feature-card"
-          onClick={() => {
-            const q =
-              "Conduct a mock AI Engineer interview and ask me the first question.";
-            setQuestion(q);
-            askAI(q);
-          }}
-        >
-          <h3>🎤 Interview Coach</h3>
-          <p>Practice HR and technical interviews.</p>
-        </div>
-
-        <div
-          className="feature-card"
-          onClick={() => {
-            const q =
-              "Analyze my skills for an AI Engineer role and identify my skill gaps.";
-            setQuestion(q);
-            askAI(q);
-          }}
-        >
-          <h3>📊 Skills Advisor</h3>
-          <p>Discover your strengths and missing skills.</p>
-        </div>
+        {QUICK_ACTIONS.map((item) => (
+          <div
+            key={item.title}
+            className="feature-card"
+            onClick={() => {
+              setQuestion(item.prompt);
+              askAI(item.prompt);
+            }}
+          >
+            <h3>{item.title}</h3>
+            <p>{item.description}</p>
+          </div>
+        ))}
       </div>
 
-      <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <button onClick={() => askAI()}>
+      <div style={{ textAlign: "center", marginTop: 20 }}>
+        <button onClick={() => askAI()} disabled={loading}>
           🚀 Ask CareerPilot
         </button>
       </div>
@@ -164,13 +166,13 @@ function App() {
         <input
           type="file"
           accept=".pdf"
-          onChange={(e) => setSelectedFile(e.target.files[0])}
+          onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
         />
 
         <br />
         <br />
 
-        <button onClick={uploadResume}>
+        <button onClick={uploadResume} disabled={loading}>
           📄 Upload Resume
         </button>
       </div>
@@ -183,10 +185,10 @@ function App() {
 
       {!loading && agentLogs.length > 0 && (
         <div className="card">
-          <h3>🤖 Agent Activity</h3>
+          <h3>🤖 Multi-Agent Activity</h3>
 
           {agentLogs.map((log, index) => (
-            <p key={index}>{log}</p>
+            <p key={index}>• {log}</p>
           ))}
         </div>
       )}
@@ -195,7 +197,7 @@ function App() {
         <div className="card">
           <h3>🤖 AI Response</h3>
 
-          <p>{answer}</p>
+          <p style={{ whiteSpace: "pre-wrap" }}>{answer}</p>
         </div>
       )}
 
@@ -203,7 +205,7 @@ function App() {
         <div className="card">
           <h3>📄 Resume Analysis</h3>
 
-          <p>{resumeAnalysis}</p>
+          <p style={{ whiteSpace: "pre-wrap" }}>{resumeAnalysis}</p>
         </div>
       )}
     </div>
