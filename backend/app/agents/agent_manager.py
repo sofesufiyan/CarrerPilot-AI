@@ -11,3 +11,11 @@ AGENTS = {
     "interview": INTERVIEW_SYSTEM_PROMPT,
     "skillgap": SKILLGAP_SYSTEM_PROMPT,
 }
+
+
+def get_agent_prompt(agent_name: str) -> str:
+    """
+    Retrieve the registered system prompt using the agent key.
+    Defaults to CAREER_SYSTEM_PROMPT if the key is not found.
+    """
+    return AGENTS.get(agent_name, CAREER_SYSTEM_PROMPT)

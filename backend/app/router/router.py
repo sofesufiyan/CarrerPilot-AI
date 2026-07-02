@@ -1,7 +1,8 @@
-from app.agents.agent_manager import AGENTS
-
-
-def get_system_prompt(question: str) -> str:
+def choose_agent(question: str) -> str:
+    """
+    Classify the student's question and return the chosen agent key.
+    Allowed keys: career, resume, roadmap, interview, skillgap
+    """
     question = question.lower().strip()
 
     # ==========================
@@ -16,7 +17,7 @@ def get_system_prompt(question: str) -> str:
         "resume analysis"
     ]):
         print("📄 Selected Agent: Resume Expert")
-        return AGENTS["resume"]
+        return "resume"
 
     # ==========================
     # Learning Planner
@@ -32,7 +33,7 @@ def get_system_prompt(question: str) -> str:
         "how should i start"
     ]):
         print("🗺️ Selected Agent: Learning Planner")
-        return AGENTS["roadmap"]
+        return "roadmap"
 
     # ==========================
     # Interview Coach
@@ -47,7 +48,7 @@ def get_system_prompt(question: str) -> str:
         "prepare for interview"
     ]):
         print("🎤 Selected Agent: Interview Coach")
-        return AGENTS["interview"]
+        return "interview"
 
     # ==========================
     # Skills Advisor
@@ -62,10 +63,10 @@ def get_system_prompt(question: str) -> str:
         "what skills"
     ]):
         print("📊 Selected Agent: Skills Advisor")
-        return AGENTS["skillgap"]
+        return "skillgap"
 
     # ==========================
     # Career Mentor (Default)
     # ==========================
     print("🚀 Selected Agent: Career Mentor")
-    return AGENTS["career"]
+    return "career"

@@ -16,7 +16,22 @@ Version: 2.0
 from app.agents.base_agent import BaseAgent
 from app.resume.scoring_engine import calculate_resume_score
 from app.resume.suggestions import generate_suggestions
-from app.router.router import get_system_prompt
+
+RESUME_SYSTEM_PROMPT = """You are CareerPilot Resume Agent.
+
+Your only job is to help students with:
+- Resume reviews
+- ATS scoring and optimization
+- Formatting and layout improvement
+- Highlighting achievements and strengths
+- Formatting professional summaries
+
+Rules:
+- Provide clear, actionable recommendations.
+- Keep responses professional, supportive, and concise.
+- Focus on practical, high-impact improvements.
+- Never answer unrelated questions.
+"""
 
 
 class ResumeAgent(BaseAgent):
@@ -51,7 +66,7 @@ class ResumeAgent(BaseAgent):
 
         analysis = self.analyze(resume_text)
 
-        system_prompt = get_system_prompt("review my resume")
+        system_prompt = RESUME_SYSTEM_PROMPT
 
         prompt = f"""
 {system_prompt}
