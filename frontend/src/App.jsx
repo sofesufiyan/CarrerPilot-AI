@@ -1,5 +1,11 @@
 import "./App.css";
 import { useEffect, useState, useRef } from "react";
+import { Routes, Route } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { auth } from "./firebase/firebase";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -33,7 +39,8 @@ const SUGGESTED_QUESTIONS = [
   "What skills should a Data Analyst learn in 2026?",
 ];
 
-function App() {
+function Dashboard() {
+  const { currentUser, logout } = useAuth();
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([
     {
@@ -53,8 +60,10 @@ function App() {
   const logEndRef = useRef(null);
 
   useEffect(() => {
-    loadAgentLogs();
-  }, []);
+    if (currentUser) {
+      loadAgentLogs();
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     scrollToBottom();
@@ -74,7 +83,13 @@ function App() {
 
   const loadAgentLogs = async () => {
     try {
-      const response = await fetch(`${API_URL}/agent-logs`);
+      const headers = {};
+      const activeUser = auth.currentUser || currentUser;
+      if (activeUser) {
+        const token = await activeUser.getIdToken();
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      const response = await fetch(`${API_URL}/agent-logs`, { headers });
       if (!response.ok) return;
       const data = await response.json();
       setAgentLogs(Array.isArray(data.logs) ? data.logs : []);
@@ -104,11 +119,18 @@ function App() {
     setLoading(true);
 
     try {
+      const headers = {
+        "Content-Type": "application/json",
+      };
+      const activeUser = auth.currentUser || currentUser;
+      if (activeUser) {
+        const token = await activeUser.getIdToken();
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_URL}/career-advice`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           question: finalQuestion,
         }),
@@ -173,8 +195,16 @@ function App() {
     setLoading(true);
 
     try {
+      const headers = {};
+      const activeUser = auth.currentUser || currentUser;
+      if (activeUser) {
+        const token = await activeUser.getIdToken();
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_URL}/resume-upload`, {
         method: "POST",
+        headers,
         body: formData,
       });
 
@@ -346,6 +376,25 @@ function App() {
             )}
             <div ref={logEndRef} />
           </div>
+        </div>
+        {/* USER PROFILE & LOGOUT */}
+        <div className="sidebar-user-section">
+          <div className="user-profile-info">
+            <span className="user-avatar">
+              {currentUser?.photoURL ? (
+                <img src={currentUser.photoURL} alt="User Avatar" className="user-avatar-img" />
+              ) : (
+                currentUser?.email?.substring(0, 2).toUpperCase() || "US"
+              )}
+            </span>
+            <div className="user-details">
+              <span className="user-name">{currentUser?.displayName || "User Account"}</span>
+              <span className="user-email">{currentUser?.email}</span>
+            </div>
+          </div>
+          <button className="logout-btn" onClick={logout} title="Sign Out">
+            🚪 Sign Out
+          </button>
         </div>
       </aside>
 
@@ -645,6 +694,23 @@ function App() {
         </footer>
       </main>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 }
 

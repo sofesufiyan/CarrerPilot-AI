@@ -1,5 +1,6 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, Depends, Request
 import os
+import logging
 
 from app.models.schemas import (
     CareerRequest,
@@ -13,23 +14,46 @@ from app.services.career_service import (
 from app.services.pdf_service import extract_text_from_pdf
 from app.tools.agent_logger import get_logs
 
+# Import authentication dependencies
+from app.auth.dependencies import get_current_user, UserSession
+
+logger = logging.getLogger("uvicorn.error")
+
 router = APIRouter()
 
 
 # ----------------------------------------
-# Career Advice Endpoint
+# Career Advice Endpoint (Guarded)
 # ----------------------------------------
 @router.post("/career-advice", response_model=CareerResponse)
-def career_advice(request: CareerRequest):
-    answer = get_career_advice(request.question)
+def career_advice(
+    request: Request,
+    body: CareerRequest,
+    user: UserSession = Depends(get_current_user)
+):
+    # Demonstrate downstream access to request.state.user
+    active_user = request.state.user
+    logger.info(f"Route Access: '/career-advice' requested by User UID: {active_user.uid} ({active_user.email})")
+
+    # Maintain existing business logic
+    answer = get_career_advice(body.question)
     return CareerResponse(answer=answer)
 
 
 # ----------------------------------------
-# Resume Upload Endpoint
+# Resume Upload Endpoint (Guarded)
 # ----------------------------------------
 @router.post("/resume-upload", response_model=ResumeResponse)
-async def resume_upload(file: UploadFile = File(...)):
+async def resume_upload(
+    request: Request,
+    file: UploadFile = File(...),
+    user: UserSession = Depends(get_current_user)
+):
+    # Demonstrate downstream access to request.state.user
+    active_user = request.state.user
+    logger.info(f"Route Access: '/resume-upload' initiated by User UID: {active_user.uid} ({active_user.email})")
+
+    # Maintain existing business logic
     temp_path = f"temp_{file.filename}"
 
     try:
@@ -53,10 +77,18 @@ async def resume_upload(file: UploadFile = File(...)):
 
 
 # ----------------------------------------
-# Agent Logs Endpoint
+# Agent Logs Endpoint (Guarded)
 # ----------------------------------------
 @router.get("/agent-logs")
-def agent_logs():
+def agent_logs(
+    request: Request,
+    user: UserSession = Depends(get_current_user)
+):
+    # Demonstrate downstream access to request.state.user
+    active_user = request.state.user
+    logger.info(f"Route Access: '/agent-logs' requested by User UID: {active_user.uid} ({active_user.email})")
+
+    # Maintain existing business logic
     return {
         "logs": get_logs()
     }
