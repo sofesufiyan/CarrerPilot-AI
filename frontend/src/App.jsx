@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { auth } from "./firebase/firebase";
+import { generateResumePDF } from "./utils/generateResumePDF";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -561,7 +562,16 @@ function Dashboard() {
             <div className="resume-dashboard-view">
               <header className="analysis-sub-header">
                 <div className="sub-header-details">
-                  <h2>{activeAnalysis.filename}</h2>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <h2>{activeAnalysis.filename}</h2>
+                    <button 
+                      onClick={() => generateResumePDF(activeAnalysis)}
+                      className="download-pdf-btn"
+                      title="Download PDF Report"
+                    >
+                      📥 Download PDF
+                    </button>
+                  </div>
                   <span>Analyzed on {activeAnalysis.generated_at ? new Date(activeAnalysis.generated_at).toLocaleString() : ""}</span>
                 </div>
                 <div className="analysis-tabs">
