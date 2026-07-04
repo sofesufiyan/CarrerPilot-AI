@@ -36,7 +36,7 @@ def career_advice(
     active_user = request.state.user
     logger.info(f"Route Access: '/career-advice' requested by User UID: {active_user.uid} ({active_user.email})")
 
-    answer = get_career_advice(body.question)
+    answer = get_career_advice(body.question, active_user.uid)
     return CareerResponse(answer=answer)
 
 

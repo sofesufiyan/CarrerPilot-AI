@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import "./Auth.css";
 
 /**
  * Registration view component for CareerPilot AI.
@@ -60,7 +61,7 @@ export const Signup = () => {
 
     try {
       await loginWithGoogle();
-      navigate("/");
+      navigate("/dashboard");
     } catch (err) {
       setError(err.message || "Failed to sign up with Google.");
     } finally {

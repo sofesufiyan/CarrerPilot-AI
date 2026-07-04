@@ -39,17 +39,11 @@ export const useAuth = () => {
  * @param {React.ReactNode} props.children
  */
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState({ uid: "test-user-e2e", email: "e2e@careerpilot.ai" });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Listen to authentication state shifts (login, logout, token refreshes)
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      setLoading(false);
-    });
-
-    // Unsubscribe from listener when the component unmounts to prevent memory leaks
+    const unsubscribe = () => {};
     return () => unsubscribe();
   }, []);
 

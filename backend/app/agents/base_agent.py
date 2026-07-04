@@ -9,7 +9,7 @@ Version: 2.0
 """
 
 from app.tools.agent_logger import add
-from app.tools.gemini_tool import ask_gemini
+from app.tools.gemini_tool import ask_gemini_json
 
 
 class BaseAgent:
@@ -33,7 +33,7 @@ class BaseAgent:
 
         self.log("Sending request to Gemini...")
 
-        response = ask_gemini(prompt)
+        response = ask_gemini_json(prompt)
 
         self.log("Received response from Gemini.")
 

@@ -47,7 +47,6 @@ export const signUp = async (email, password) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     return userCredential;
   } catch (error) {
-    console.error("AuthService: signUp failed", error);
     throw new Error(mapAuthError(error));
   }
 };
@@ -64,7 +63,6 @@ export const login = async (email, password) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return userCredential;
   } catch (error) {
-    console.error("AuthService: login failed", error);
     throw new Error(mapAuthError(error));
   }
 };
@@ -79,7 +77,6 @@ export const loginWithGoogle = async () => {
     const userCredential = await signInWithPopup(auth, googleProvider);
     return userCredential;
   } catch (error) {
-    console.error("AuthService: loginWithGoogle failed", error);
     throw new Error(mapAuthError(error));
   }
 };
@@ -93,7 +90,6 @@ export const logout = async () => {
   try {
     await signOut(auth);
   } catch (error) {
-    console.error("AuthService: logout failed", error);
     throw new Error(mapAuthError(error));
   }
 };

@@ -1,0 +1,127 @@
+/* Upload Resume - Light SaaS Theme */
+.upload-resume-wrapper {
+  width: 100%;
+}
+
+.upload-dropzone-card {
+  border: 2px dashed #E5E7EB;
+  border-radius: 12px;
+  background-color: #FFFFFF;
+  padding: 24px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-dropzone-card:hover {
+  border-color: #93C5FD;
+  background-color: #EFF6FF;
+}
+
+.upload-dropzone-card.dragging {
+  border-color: #3B82F6;
+  background-color: #EFF6FF;
+}
+
+.upload-dropzone-card.uploading {
+  border-color: #93C5FD;
+  background-color: #F8FAFC;
+  cursor: default;
+}
+
+.upload-dropzone-card.success {
+  border-color: #6EE7B7;
+  background-color: #F0FDF4;
+}
+
+.upload-dropzone-card.error {
+  border-color: #FCA5A5;
+  background-color: #FEF2F2;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.upload-icon-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #F3F4F6;
+  color: #6B7280;
+  transition: all 0.2s ease;
+}
+
+.upload-dropzone-card:hover .upload-icon-circle {
+  background-color: #DBEAFE;
+  color: #2563EB;
+}
+
+.upload-icon-circle.uploading {
+  background-color: #DBEAFE;
+  color: #2563EB;
+}
+
+.upload-icon-circle.success {
+  background-color: #D1FAE5;
+  color: #059669;
+}
+
+.upload-icon-circle.error {
+  background-color: #FEE2E2;
+  color: #DC2626;
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.upload-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.upload-primary-text {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.upload-secondary-text {
+  font-size: 0.8rem;
+  color: #6B7280;
+}
+
+/* Status Text Colors */
+.text-primary {
+  color: #2563EB;
+}
+
+.text-success {
+  color: #059669;
+}
+
+.text-error {
+  color: #DC2626;
+}

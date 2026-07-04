@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router
+from app.api.interview_routes import router as interview_router
 
 app = FastAPI(
     title="CareerPilot-AI",
@@ -18,6 +19,7 @@ app.add_middleware(
 )
 
 app.include_router(router)
+app.include_router(interview_router)
 
 
 @app.on_event("startup")

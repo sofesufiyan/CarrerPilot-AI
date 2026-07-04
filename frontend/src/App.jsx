@@ -1,46 +1,24 @@
 import "./App.css";
-import { useEffect, useState, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { auth } from "./firebase/firebase";
 import { generateResumePDF } from "./utils/generateResumePDF";
+import Dashboard from "./components/dashboard/Dashboard";
+const InterviewCoach = lazy(() => import("./components/interview/InterviewCoach"));
+import TopNav from "./components/layout/TopNav";
+const Roadmap = lazy(() => import("./components/dashboard/Roadmap"));
+const SkillGap = lazy(() => import("./components/dashboard/SkillGap"));
+import Sidebar from "./components/layout/Sidebar";
+const ResumeAnalysis = lazy(() => import("./components/dashboard/ResumeAnalysis"));
+import ChatInterface from "./components/chat/ChatInterface";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Landing from "./pages/Landing";
 
-const API_URL = import.meta.env.VITE_API_URL;
-
-const QUICK_ACTIONS = [
-  {
-    title: "🗺️ Learning Planner",
-    description: "Create your personalized AI learning roadmap.",
-    prompt: "Create a detailed 12-month roadmap to become an AI Engineer with monthly milestones, projects, and interview preparation.",
-  },
-  {
-    title: "📄 Resume Expert",
-    description: "Improve your resume and ATS score.",
-    prompt: "Review my resume for an AI Engineer role and provide ATS improvements, missing skills, and recommendations.",
-  },
-  {
-    title: "🎤 Interview Coach",
-    description: "Practice HR and technical interviews.",
-    prompt: "Conduct a mock AI Engineer interview. Ask one question at a time and evaluate each answer.",
-  },
-  {
-    title: "📊 Skill Gap Analyzer",
-    description: "Identify strengths and missing skills.",
-    prompt: "Analyze my skills for an AI Engineer role and identify my technical and soft skill gaps with a learning plan.",
-  },
-];
-
-const SUGGESTED_QUESTIONS = [
-  "How can I transition from Web Development to AI/ML?",
-  "What is the average roadmap to learn Deep Learning?",
-  "How should I answer 'What is your greatest weakness' in an interview?",
-  "What skills should a Data Analyst learn in 2026?",
-];
-
-function Dashboard() {
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+function MainLayout() {
   const { currentUser, logout } = useAuth();
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([
@@ -53,23 +31,21 @@ function Dashboard() {
     },
   ]);
   const [loading, setLoading] = useState(false);
-  const [agentLogs, setAgentLogs] = useState([]);
   const [copiedId, setCopiedId] = useState(null);
   
   // Resume Intelligence Engine State (Version 1.0)
   const [resumeHistory, setResumeHistory] = useState([]);
+  const [interviewHistory, setInterviewHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState(null);
   const [activeAnalysis, setActiveAnalysis] = useState(null);
-  const [viewMode, setViewMode] = useState("chat"); // "chat" | "analysis"
+  const [viewMode, setViewMode] = useState("dashboard"); // "dashboard" | "chat" | "analysis"
   const [analysisTab, setAnalysisTab] = useState("overview"); // "overview" | "competency" | "roadmap" | "recommendations"
 
   const messagesEndRef = useRef(null);
-  const logEndRef = useRef(null);
 
   useEffect(() => {
     if (currentUser) {
-      loadAgentLogs();
       loadResumeHistory();
     }
   }, [currentUser]);
@@ -78,33 +54,8 @@ function Dashboard() {
     scrollToBottom();
   }, [messages, loading]);
 
-  useEffect(() => {
-    scrollToLogEnd();
-  }, [agentLogs]);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const scrollToLogEnd = () => {
-    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const loadAgentLogs = async () => {
-    try {
-      const headers = {};
-      const activeUser = auth.currentUser || currentUser;
-      if (activeUser) {
-        const token = await activeUser.getIdToken();
-        headers["Authorization"] = "Bearer " + token;
-      }
-      const response = await fetch(API_URL + "/agent-logs", { headers });
-      if (!response.ok) return;
-      const data = await response.json();
-      setAgentLogs(Array.isArray(data.logs) ? data.logs : []);
-    } catch (error) {
-      console.error("Error fetching agent logs:", error);
-    }
   };
 
   const loadResumeHistory = async () => {
@@ -118,16 +69,36 @@ function Dashboard() {
         headers["Authorization"] = "Bearer " + token;
       }
       const response = await fetch(API_URL + "/resume-history", { headers });
-      if (!response.ok) {
-        throw new Error("Failed to load resume history");
-      }
       const data = await response.json();
-      setResumeHistory(data);
-    } catch (error) {
-      console.error("Error fetching resume history:", error);
-      setHistoryError(error.message || "Failed to retrieve history");
+      if (response.ok) {
+        setResumeHistory(data);
+      } else {
+        setHistoryError("Failed to fetch resume history.");
+      }
+    } catch (err) {
+      setHistoryError("Network error fetching resume history.");
     } finally {
       setHistoryLoading(false);
+    }
+  };
+
+  const fetchInterviewHistory = async () => {
+    try {
+      const headers = {};
+      const activeUser = auth.currentUser || currentUser;
+      if (activeUser) {
+        const token = await activeUser.getIdToken();
+        headers["Authorization"] = "Bearer " + token;
+      }
+      const res = await fetch(API_URL + "/interview/history", {
+        headers,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setInterviewHistory(data.history || []);
+      }
+    } catch (err) {
+      setHistoryError("Failed to fetch interview history.");
     }
   };
 
@@ -136,7 +107,7 @@ function Dashboard() {
     if (!finalQuestion) return;
 
     const userMsg = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       sender: "user",
       text: finalQuestion,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -176,21 +147,18 @@ function Dashboard() {
       setMessages((prev) => [
         ...prev,
         {
-          id: (Date.now() + 1).toString(),
+          id: crypto.randomUUID(),
           sender: "ai",
           text: aiResponseText,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           type: "text",
         },
       ]);
-
-      await loadAgentLogs();
     } catch (error) {
-      console.error(error);
       setMessages((prev) => [
         ...prev,
         {
-          id: (Date.now() + 1).toString(),
+          id: crypto.randomUUID(),
           sender: "ai",
           text: "Unable to connect to the backend. Please check your network connection.",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -210,7 +178,7 @@ function Dashboard() {
     setMessages((prev) => [
       ...prev,
       {
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         sender: "user",
         text: "📄 Initiated Resume Scoring: " + fileName,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -243,7 +211,7 @@ function Dashboard() {
         setMessages((prev) => [
           ...prev,
           {
-            id: (Date.now() + 1).toString(),
+            id: crypto.randomUUID(),
             sender: "ai",
             text: "Resume score calculated: " + data.resume_score + "/100. Open the Resume Intelligence tab to view the roadmap and recommendations.",
             timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -257,23 +225,23 @@ function Dashboard() {
         setAnalysisTab("overview");
 
         // Reload history sidebar
-        await loadResumeHistory();
+        loadResumeHistory();
+        fetchInterviewHistory();
+        return true;
       } else {
         setMessages((prev) => [
           ...prev,
           {
-            id: (Date.now() + 1).toString(),
+            id: crypto.randomUUID(),
             sender: "ai",
             text: "Error analyzing resume: " + (data.detail || "Unknown server error"),
             timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
             type: "text",
           },
         ]);
+        return false;
       }
-
-      await loadAgentLogs();
     } catch (error) {
-      console.error(error);
       setMessages((prev) => [
         ...prev,
         {
@@ -284,6 +252,7 @@ function Dashboard() {
           type: "text",
         },
       ]);
+      return false;
     } finally {
       setLoading(false);
     }
@@ -317,127 +286,41 @@ function Dashboard() {
     setLoading(false);
     setCopiedId(null);
     setViewMode("chat");
+    setTimeout(() => {
+      const textarea = document.querySelector('.floating-chat-box textarea');
+      if (textarea) textarea.focus();
+    }, 100);
   };
 
   const isChatEmpty = messages.length <= 1;
 
+  const viewFullReport = () => {
+    if (resumeHistory.length > 0) {
+      setActiveAnalysis(resumeHistory[0]);
+      setViewMode("analysis");
+      setAnalysisTab("overview");
+    }
+  };
+
   return (
-    <div className="chat-app-container">
-      {/* LEFT SIDEBAR PANEL */}
-      <aside className="chat-sidebar">
-        <div className="brand-header">
-          <span className="brand-logo">🚀</span>
-          <div className="brand-titles">
-            <h2>CareerPilot AI</h2>
-            <span>FastAPI & Gemini Multi-Agent</span>
-          </div>
-        </div>
-
-        <button className="new-chat-btn" onClick={resetChat}>
-          <span>+</span> New Conversation
-        </button>
-
-        {/* AUTOMATIC RESUME SCORING ENGINE UPLOADER */}
-        <div className="sidebar-section resume-uploader-section">
-          <h3>📄 Resume Scoring Engine</h3>
-          <p className="section-subtitle">Auto-triggers analysis upon file drop</p>
-          <div className="upload-container">
-            <input
-              type="file"
-              id="sidebar-file-upload"
-              accept=".pdf"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  uploadResume(file);
-                }
-              }}
-            />
-            <label htmlFor="sidebar-file-upload" className="upload-dropzone">
-              <span className="upload-icon">📁</span>
-              <span className="upload-text">Upload PDF Resume</span>
-            </label>
-          </div>
-        </div>
-
-        {/* RESUME DATABASE HISTORY LIST */}
-        <div className="sidebar-section history-section">
-          <h3>📜 Resume History</h3>
-          {historyLoading ? (
-            <div className="history-status-message">Loading history...</div>
-          ) : historyError ? (
-            <div className="history-status-message error">{historyError}</div>
-          ) : resumeHistory.length > 0 ? (
-            <div className="history-list">
-              {resumeHistory.map((item) => (
-                <div
-                  key={item.id}
-                  className={"history-item " + (activeAnalysis?.id === item.id && viewMode === "analysis" ? "active" : "")}
-                  onClick={() => {
-                    setActiveAnalysis(item);
-                    setViewMode("analysis");
-                    setAnalysisTab("overview");
-                  }}
-                >
-                  <div className="history-item-header">
-                    <span className="history-name" title={item.filename}>{item.filename}</span>
-                    <span className="history-date">
-                      {item.generated_at ? new Date(item.generated_at).toLocaleDateString() : ""}
-                    </span>
-                  </div>
-                  <div className="history-scores">
-                    <span className="history-score-badge quality-badge">
-                      Resume: {item.resume_score}
-                    </span>
-                    <span className="history-score-badge ats-badge">
-                      ATS: {item.ats_score}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="history-status-message empty">No resumes scored yet</div>
-          )}
-        </div>
-
-        {/* LIVE AGENT LOGGER TERMINAL */}
-        <div className="sidebar-section agent-logger-section">
-          <h3>🤖 Live Agent Logs</h3>
-          <div className="logger-terminal">
-            {!Array.isArray(agentLogs) || agentLogs.length === 0 ? (
-              <div className="empty-logs">Terminal inactive. Send queries to start.</div>
-            ) : (
-              agentLogs.map((log, index) => (
-                <div key={index} className="log-line">
-                  <span className="log-bullet">•</span> {log}
-                </div>
-              ))
-            )}
-            <div ref={logEndRef} />
-          </div>
-        </div>
-
-        {/* USER PROFILE & LOGOUT */}
-        <div className="sidebar-user-section">
-          <div className="user-profile-info">
-            <span className="user-avatar">
-              {currentUser?.photoURL ? (
-                <img src={currentUser.photoURL} alt="User Avatar" className="user-avatar-img" />
-              ) : (
-                currentUser?.email?.substring(0, 2).toUpperCase() || "US"
-              )}
-            </span>
-            <div className="user-details">
-              <span className="user-name">{currentUser?.displayName || "User Account"}</span>
-              <span className="user-email">{currentUser?.email}</span>
-            </div>
-          </div>
-          <button className="logout-btn" onClick={logout} title="Sign Out">
-            🚪 Sign Out
-          </button>
-        </div>
-      </aside>
+    <div className="app-wrapper">
+      <div className="bg-grid"></div>
+      <TopNav userEmail={currentUser?.email} onLogout={logout} />
+      <div className="chat-app-container">
+        {/* LEFT SIDEBAR PANEL */}
+        <Sidebar
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          loading={loading}
+          uploadResume={uploadResume}
+          historyLoading={historyLoading}
+          historyError={historyError}
+          resumeHistory={resumeHistory}
+          activeAnalysis={activeAnalysis}
+          setActiveAnalysis={setActiveAnalysis}
+          setAnalysisTab={setAnalysisTab}
+          resetChat={resetChat}
+        />
 
       {/* MAIN WORKSPACE */}
       <main className="chat-workspace">
@@ -458,451 +341,67 @@ function Dashboard() {
             </button>
           )}
         </header>
-
-        {/* VIEW CONTAINER */}
+{/* VIEW CONTAINER */}
         <div className="workspace-view-content">
-          {viewMode === "chat" ? (
+          {viewMode === "dashboard" ? (
+            <Dashboard 
+              resumeHistory={resumeHistory} 
+              interviewHistory={interviewHistory}
+              historyLoading={historyLoading} 
+              askAI={(q) => {
+                setViewMode("chat");
+                askAI(q);
+              }}
+              viewFullReport={viewFullReport}
+              user={currentUser}
+              setViewMode={setViewMode}
+            />
+          ) : viewMode === "roadmap" ? (
+            <Suspense fallback={<div className="lazy-loader">Loading Roadmap...</div>}>
+              <Roadmap resumeHistory={resumeHistory} setViewMode={setViewMode} />
+            </Suspense>
+          ) : viewMode === "skillgap" ? (
+            <Suspense fallback={<div className="lazy-loader">Loading Skill Gap Analysis...</div>}>
+              <SkillGap resumeHistory={resumeHistory} setViewMode={setViewMode} />
+            </Suspense>
+          ) : viewMode === "interview" ? (
+            <Suspense fallback={<div className="lazy-loader">Loading Interview Coach...</div>}>
+              <InterviewCoach refreshHistory={fetchInterviewHistory} />
+            </Suspense>
+          ) : viewMode === "chat" ? (
             /* ========================================================= */
             /* 1. CHAT MENTOR VIEW                                       */
             /* ========================================================= */
-            <div className="chat-message-area">
-              {isChatEmpty ? (
-                <div className="chat-welcome-container">
-                  <div className="welcome-hero">
-                    <h1>Unlock Your Career Potential</h1>
-                    <p>
-                      Receive personalized learning paths, resume optimization, mock interviews, and
-                      technical gap analysis driven by cooperative AI agents.
-                    </p>
-                  </div>
-
-                  <div className="quick-actions-section">
-                    <h3>Select a Quick Action</h3>
-                    <div className="quick-actions-grid">
-                      {QUICK_ACTIONS.map((item) => (
-                        <div
-                          key={item.title}
-                          className="quick-action-card"
-                          onClick={() => askAI(item.prompt)}
-                        >
-                          <h4>{item.title}</h4>
-                          <p>{item.description}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="suggested-questions-section">
-                    <h3>Suggested Questions</h3>
-                    <div className="suggested-chips-container">
-                      {SUGGESTED_QUESTIONS.map((q, idx) => (
-                        <button
-                          key={idx}
-                          className="suggested-question-chip"
-                          onClick={() => askAI(q)}
-                        >
-                          {q}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="chat-thread">
-                  {messages.map((msg) => (
-                    <div key={msg.id} className={"message-row " + msg.sender + "-row"}>
-                      <div className="message-wrapper">
-                        <div className="message-bubble-header">
-                          <span className="sender-label">
-                            {msg.sender === "ai" ? "🤖 CareerPilot Mentor" : "👤 You"}
-                          </span>
-                          <span className="message-timestamp">{msg.timestamp}</span>
-                        </div>
-                        <div className={"message-bubble " + msg.sender + "-bubble"}>
-                          <p style={{ whiteSpace: "pre-wrap" }}>{msg.text}</p>
-                        </div>
-                        {msg.sender === "ai" && (
-                          <div className="bubble-actions">
-                            <button
-                              className="copy-bubble-btn"
-                              onClick={() => copyToClipboard(msg.text, msg.id)}
-                              title="Copy advice to clipboard"
-                            >
-                              {copiedId === msg.id ? "✓ Copied!" : "📋 Copy"}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  {loading && (
-                    <div className="message-row ai-row">
-                      <div className="message-wrapper">
-                        <div className="message-bubble-header">
-                          <span className="sender-label">🤖 CareerPilot Mentor</span>
-                        </div>
-                        <div className="message-bubble ai-bubble typing-indicator-bubble">
-                          <div className="typing-dots">
-                            <span className="typing-dot"></span>
-                            <span className="typing-dot"></span>
-                            <span className="typing-dot"></span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-              )}
-            </div>
+            <>
+            <ChatInterface
+              messages={messages}
+              isChatEmpty={isChatEmpty}
+              loading={loading}
+              askAI={askAI}
+              copyToClipboard={copyToClipboard}
+              copiedId={copiedId}
+              messagesEndRef={messagesEndRef}
+              question={question}
+              setQuestion={setQuestion}
+              handleKeyDown={handleKeyDown}
+            />
+          </>
           ) : (
             /* ========================================================= */
             /* 2. RESUME INTELLIGENCE ENGINE DASHBOARD                   */
             /* ========================================================= */
-            <div className="resume-dashboard-view">
-              <header className="analysis-sub-header">
-                <div className="sub-header-details">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <h2>{activeAnalysis.filename}</h2>
-                    <button 
-                      onClick={() => generateResumePDF(activeAnalysis)}
-                      className="download-pdf-btn"
-                      title="Download PDF Report"
-                    >
-                      📥 Download PDF
-                    </button>
-                  </div>
-                  <span>Analyzed on {activeAnalysis.generated_at ? new Date(activeAnalysis.generated_at).toLocaleString() : ""}</span>
-                </div>
-                <div className="analysis-tabs">
-                  <button
-                    className={"analysis-tab-btn " + (analysisTab === "overview" ? "active" : "")}
-                    onClick={() => setAnalysisTab("overview")}
-                  >
-                    📈 Overview
-                  </button>
-                  <button
-                    className={"analysis-tab-btn " + (analysisTab === "competency" ? "active" : "")}
-                    onClick={() => setAnalysisTab("competency")}
-                  >
-                    🏆 Competency Matrix
-                  </button>
-                  <button
-                    className={"analysis-tab-btn " + (analysisTab === "roadmap" ? "active" : "")}
-                    onClick={() => setAnalysisTab("roadmap")}
-                  >
-                    🗺️ Skill Gap & Roadmap
-                  </button>
-                  <button
-                    className={"analysis-tab-btn " + (analysisTab === "recommendations" ? "active" : "")}
-                    onClick={() => setAnalysisTab("recommendations")}
-                  >
-                    🚀 Career Accelerators
-                  </button>
-                </div>
-              </header>
-
-              <div className="analysis-tab-content">
-                {/* A. OVERVIEW TAB */}
-                {analysisTab === "overview" && (
-                  <div className="overview-tab-pane">
-                    <div className="scores-hero-row">
-                      <div className="hero-score-card circular-score-wrapper">
-                        <h3>Resume Quality</h3>
-                        <div className="score-percentage-circle quality-circle">
-                          <svg viewBox="0 0 36 36" className="circular-chart">
-                            <path
-                              className="circle-bg"
-                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                            />
-                            <path
-                              className="circle"
-                              strokeDasharray={activeAnalysis.resume_score + ", 100"}
-                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                            />
-                            <text x="18" y="20.35" className="percentage">
-                              {activeAnalysis.resume_score}%
-                            </text>
-                          </svg>
-                        </div>
-                      </div>
-
-                      <div className="hero-score-card circular-score-wrapper">
-                        <h3>ATS Readiness</h3>
-                        <div className="score-percentage-circle ats-circle">
-                          <svg viewBox="0 0 36 36" className="circular-chart">
-                            <path
-                              className="circle-bg"
-                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                            />
-                            <path
-                              className="circle"
-                              strokeDasharray={activeAnalysis.ats_score + ", 100"}
-                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                            />
-                            <text x="18" y="20.35" className="percentage">
-                              {activeAnalysis.ats_score}%
-                            </text>
-                          </svg>
-                        </div>
-                      </div>
-
-                      <div className="hero-score-card text-score-wrapper">
-                        <h3>AI Confidence</h3>
-                        <div className="confidence-numeric-box">
-                          <span className="confidence-number">
-                            {activeAnalysis.confidence_score || 0}%
-                          </span>
-                          <p className="confidence-subtitle">Profile Match Confidence</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="overview-ai-explanation">
-                      <h3>💡 AI Career Mentor Analysis</h3>
-                      <p className="explanation-paragraph">{activeAnalysis.ai_explanation}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* B. COMPETENCY MATRIX TAB */}
-                {analysisTab === "competency" && (
-                  <div className="competency-tab-pane">
-                    <div className="competency-skills-matrix">
-                      <div className="skills-matrix-column">
-                        <h3>🛠️ Extracted Technical Skills</h3>
-                        <div className="skills-tag-group">
-                          {activeAnalysis.technical_skills?.length > 0 ? (
-                            activeAnalysis.technical_skills.map((skill, idx) => (
-                              <span key={idx} className="matrix-skill-tag technical-tag">
-                                {skill}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="empty-state-label">No technical skills detected</span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="skills-matrix-column">
-                        <h3>👥 Extracted Soft Skills</h3>
-                        <div className="skills-tag-group">
-                          {activeAnalysis.soft_skills?.length > 0 ? (
-                            activeAnalysis.soft_skills.map((skill, idx) => (
-                              <span key={idx} className="matrix-skill-tag soft-tag">
-                                {skill}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="empty-state-label">No soft skills detected</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="strengths-weaknesses-comparison-grid">
-                      <div className="comparison-card strengths-card">
-                        <h3>💪 Strengths & Achievements</h3>
-                        <ul>
-                          {activeAnalysis.strengths?.length > 0 ? (
-                            activeAnalysis.strengths.map((str, idx) => <li key={idx}>{str}</li>)
-                          ) : (
-                            <li>No strengths logged</li>
-                          )}
-                        </ul>
-                      </div>
-
-                      <div className="comparison-card weaknesses-card">
-                        <h3>⚠️ Improvement Areas</h3>
-                        <ul>
-                          {activeAnalysis.weaknesses?.length > 0 ? (
-                            activeAnalysis.weaknesses.map((weak, idx) => <li key={idx}>{weak}</li>)
-                          ) : (
-                            <li>No improvement areas logged</li>
-                          )}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* C. SKILL GAP & ROADMAP TAB */}
-                {analysisTab === "roadmap" && (
-                  <div className="roadmap-tab-pane">
-                    <div className="gaps-suggestions-row">
-                      <div className="gap-card">
-                        <h3>🔴 Missing Gaps</h3>
-                        <p className="gap-subtitle">Required skills missing from your resume</p>
-                        <div className="skills-tag-group">
-                          {activeAnalysis.missing_skills?.length > 0 ? (
-                            activeAnalysis.missing_skills.map((skill, idx) => (
-                              <span key={idx} className="matrix-skill-tag gap-tag">
-                                {skill}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="empty-state-label text-green">No major skill gaps detected!</span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="suggestions-card">
-                        <h3>Suggestions & Fixes</h3>
-                        <ul>
-                          {activeAnalysis.suggestions?.length > 0 ? (
-                            activeAnalysis.suggestions.map((sug, idx) => <li key={idx}>{sug}</li>)
-                          ) : (
-                            <li>Resume matches target roles cleanly.</li>
-                          )}
-                        </ul>
-                      </div>
-                    </div>
-
-                    <div className="roadmap-timeline-section">
-                      <h3>🗺️ Personalized Learning Roadmap</h3>
-                      <p className="roadmap-subtitle">Follow these 6 sequential steps to close your skill gaps</p>
-                      
-                      <div className="timeline-container">
-                        {activeAnalysis.roadmap?.length > 0 ? (
-                          activeAnalysis.roadmap.map((step, idx) => (
-                            <div key={idx} className="timeline-step-row">
-                              <div className="timeline-badge">{idx + 1}</div>
-                              <div className="timeline-body-card">
-                                <p>{step}</p>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="empty-logs">No learning steps generated</div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* D. CAREER ACCELERATORS TAB */}
-                {analysisTab === "recommendations" && (
-                  <div className="accelerators-tab-pane">
-                    <div className="accelerator-section">
-                      <h3>🎯 Recommended Job Roles</h3>
-                      <div className="accelerator-grid roles-grid">
-                        {activeAnalysis.recommended_roles?.length > 0 ? (
-                          activeAnalysis.recommended_roles.map((role, idx) => (
-                            <div key={idx} className="accelerator-card role-card">
-                              <h4>{role.title}</h4>
-                              <div className="role-meta-row">
-                                <span className="salary-meta">💵 {role.salary_range}</span>
-                                <span className="match-meta">🎯 {role.match_percentage}% Match</span>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="empty-state-label">No recommended job roles</div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="accelerator-section">
-                      <h3>🏅 Recommended Certifications</h3>
-                      <div className="accelerator-grid certs-grid">
-                        {activeAnalysis.recommended_certifications?.length > 0 ? (
-                          activeAnalysis.recommended_certifications.map((cert, idx) => (
-                            <div key={idx} className="accelerator-card cert-card">
-                              <h4>{cert.name}</h4>
-                              <div className="cert-meta-row">
-                                <span className="provider-meta">🏢 {cert.provider}</span>
-                                <span className="difficulty-meta">⚡ {cert.difficulty}</span>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="empty-state-label">No certifications recommended</div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="accelerator-section">
-                      <h3>📁 Recommended Portfolio Projects</h3>
-                      <div className="accelerator-grid projects-grid">
-                        {activeAnalysis.recommended_projects?.length > 0 ? (
-                          activeAnalysis.recommended_projects.map((proj, idx) => (
-                            <div key={idx} className="accelerator-card project-card">
-                              <h4>{proj.title}</h4>
-                              <p>{proj.description}</p>
-                              <div className="project-stack-tags">
-                                {proj.tech_stack?.map((tech, i) => (
-                                  <span key={i} className="tech-badge">{tech}</span>
-                                ))}
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="empty-state-label">No portfolio projects recommended</div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="accelerator-section">
-                      <h3>📚 Recommended Learning Center</h3>
-                      <div className="resources-list-group">
-                        {activeAnalysis.learning_resources?.length > 0 ? (
-                          activeAnalysis.learning_resources.map((res, idx) => (
-                            <a
-                              key={idx}
-                              href={res.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="resource-item-link"
-                            >
-                              <div className="resource-link-content">
-                                <span className="resource-type-icon">
-                                  {res.type === "Course" ? "🎓" : res.type === "Documentation" ? "📖" : "🔗"}
-                                </span>
-                                <div className="resource-texts">
-                                  <strong>{res.title}</strong>
-                                  <span>Type: {res.type}</span>
-                                </div>
-                              </div>
-                              <span className="arrow-icon">➔</span>
-                            </a>
-                          ))
-                        ) : (
-                          <div className="empty-state-label">No learning resources recommended</div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            <Suspense fallback={<div className="lazy-loader">Loading Resume Intelligence...</div>}>
+              <ResumeAnalysis
+                activeAnalysis={activeAnalysis}
+                generateResumePDF={generateResumePDF}
+                analysisTab={analysisTab}
+                setAnalysisTab={setAnalysisTab}
+              />
+            </Suspense>
           )}
         </div>
-
-        {/* CHAT INPUT AREA */}
-        <footer className="chat-input-panel">
-          <div className="input-box-wrapper">
-            <textarea
-              rows={1}
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask anything about roadmaps, resumes, mock interviews, or career advice..."
-              disabled={loading}
-            />
-            <button
-              onClick={() => askAI()}
-              disabled={loading || !question.trim()}
-              className="send-btn"
-              title="Send Message"
-            >
-              ➔
-            </button>
-          </div>
-          <div className="input-footer-note">
-            CareerPilot AI can make mistakes. Focus on actionable insights and verify resources.
-          </div>
-        </footer>
       </main>
+      </div>
     </div>
   );
 }
@@ -912,11 +411,12 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/" element={<Landing />} />
       <Route
-        path="/"
+        path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <MainLayout />
           </ProtectedRoute>
         }
       />

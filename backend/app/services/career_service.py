@@ -2,14 +2,15 @@ import concurrent.futures
 import json
 import logging
 import uuid
+import re
 from datetime import datetime
 from typing import Dict, Any
 
 from app.agents.orchestrator import prepare_prompt
 from app.agents.resume_agent import ResumeAgent
-from app.tools.gemini_tool import ask_gemini
+from app.tools.gemini_tool import ask_gemini_text, ask_gemini_json
 from app.tools.agent_logger import add, clear
-from app.db.database import save_resume_analysis
+from app.db.database import save_resume_analysis, get_resume_history
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -19,16 +20,43 @@ GEMINI_TIMEOUT_SECONDS = 20
 # -------------------------------------
 # Career Advice
 # -------------------------------------
-def get_career_advice(question: str) -> str:
+def should_inject_resume_context(question: str) -> bool:
+    """
+    Classifies user intent to determine if resume context is relevant.
+    """
+    keywords = [r'\bresume\b', r'\bcv\b', r'\bats\b', r'\bprofile\b', 
+                r'\bportfolio\b', r'\bprojects?\b', r'\bexperience\b', r'\bbackground\b']
+    pattern = re.compile('|'.join(keywords), re.IGNORECASE)
+    return bool(pattern.search(question))
+
+def get_career_advice(question: str, uid: str = None) -> str:
     clear()
     add("📥 User Question Received")
-    prompt = prepare_prompt(question)
+    
+    resume_context = ""
+    if uid and should_inject_resume_context(question):
+        add("🔍 Resume context intent detected.")
+        try:
+            history = get_resume_history(uid)
+            if history:
+                latest = history[0]
+                data = latest.get("data", {})
+                resume_score = latest.get("resume_score", 0)
+                ats_score = latest.get("ats_score", 0)
+                skills = data.get("technical_skills", []) + data.get("soft_skills", [])
+                projects = [p.get("title", "") for p in data.get("recommended_projects", [])]
+                
+                resume_context = f"\n\n[USER CONTEXT]\nResume Score: {resume_score}%\nATS Score: {ats_score}%\nSkills: {', '.join(skills[:5])}\nProjects: {', '.join(projects[:2])}\n[/USER CONTEXT]"
+        except Exception as e:
+            logger.error(f"Failed to fetch user context for career advice: {e}")
+
+    prompt = prepare_prompt(question) + resume_context
 
     try:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             add("🚀 Sending Prompt to Gemini")
             future = executor.submit(
-                ask_gemini,
+                ask_gemini_text,
                 prompt,
             )
             response = future.result(timeout=GEMINI_TIMEOUT_SECONDS)
@@ -102,16 +130,12 @@ def review_resume(resume_text: str, uid: str, filename: str = "resume.pdf") -> D
         with concurrent.futures.ThreadPoolExecutor() as executor:
             add("🚀 Sending Resume Analysis to Gemini")
             future = executor.submit(
-                ask_gemini,
+                ask_gemini_json,
                 prompt,
             )
             # Fetch response with a strict timeout limit
             res = future.result(timeout=GEMINI_TIMEOUT_SECONDS)
             
-            # ask_gemini() is explicitly designed to return a failure string on exception
-            if "⚠️ Gemini" in res:
-                raise ValueError("503 Service Unavailable: Gemini is busy.")
-                
             ai_response = res
             add("✅ Resume Review Completed")
             
@@ -132,13 +156,11 @@ def review_resume(resume_text: str, uid: str, filename: str = "resume.pdf") -> D
         learning_resources = []
         recommended_projects = []
     else:
-        # Parse Gemini's structured JSON recommendations
-        parsed_data = parse_gemini_json(ai_response)
+        parsed_data = ai_response
         
-        # Fallback to plain text explanation if JSON parsing failed
         ai_explanation = parsed_data.get("ai_explanation")
         if not ai_explanation:
-            ai_explanation = ai_response
+            ai_explanation = "AI analysis completed."
 
         # Format and normalize parsed values (limit roadmap to 6 steps)
         roadmap = parsed_data.get("roadmap", [])
