@@ -323,14 +323,26 @@
             font-size: 12px;
         }
 
-        .hero-title {
-            font-size: 3.8rem;
-            font-weight: 900;
-            line-height: 1.08;
-            letter-spacing: -2px;
-            margin-bottom: 24px;
-            animation: fadeInUp 0.6s ease 0.1s both;
-        }
+       .hero-title {
+    font-size: 4.5rem;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -2px;
+    margin-bottom: 24px;
+
+    background: linear-gradient(
+        90deg,
+        #111827 0%,
+        #1E3A8A 55%,
+        #2563EB 100%
+    );
+
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+
+    animation: fadeInUp 0.5s ease 0.1s both;
+}
 
         .hero-title .gradient-text {
             background: var(--gradient-1);

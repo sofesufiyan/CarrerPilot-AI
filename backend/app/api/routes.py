@@ -94,8 +94,10 @@ def resume_history(
     history = get_resume_history(active_user.uid)
 
     results = []
+
     for item in history:
         data = item.get("data", {})
+
         flat_analysis = {
             "id": item.get("id"),
             "filename": item.get("filename"),
@@ -117,7 +119,15 @@ def resume_history(
             "learning_resources": data.get("learning_resources", []),
             "recommended_projects": data.get("recommended_projects", []),
         }
-        results.append(ResumeResponse(**flat_analysis))
+
+        try:
+            results.append(ResumeResponse(**flat_analysis))
+        except Exception as e:
+            logger.error(
+                f"Skipping invalid resume history record "
+                f"{item.get('id')}: {e}"
+            )
+            continue
 
     return results
 

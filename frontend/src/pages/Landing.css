@@ -108,9 +108,18 @@
   line-height: 1.1;
   letter-spacing: -2px;
   margin-bottom: 24px;
-  background: linear-gradient(to right, #ffffff, #94A3B8);
+
+  background: linear-gradient(
+90deg,
+#0F172A 0%,
+#1E3A8A 45%,
+#2563EB 100%
+);
+
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+
   animation: fadeInUp 0.5s ease 0.1s both;
 }
 
