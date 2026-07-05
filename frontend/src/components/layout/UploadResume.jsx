@@ -10,8 +10,14 @@ const UploadResume = ({ onUpload, isUploading }) => {
   
   // Sync external uploading state (fallback cleanup)
   useEffect(() => {
-    if (isUploading && fileStatus === 'idle') {
-      setFileStatus('uploading');
+    if (isUploading) {
+      if (fileStatus === 'idle') {
+        setFileStatus('uploading');
+      }
+    } else {
+      if (fileStatus === 'uploading') {
+        setFileStatus('idle');
+      }
     }
   }, [isUploading]);
 

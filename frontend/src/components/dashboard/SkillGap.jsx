@@ -7,8 +7,8 @@ const statusConfig = {
   gap: { label: 'Gap', color: 'error', bg: 'bg-error-500', badge: 'bg-error-50 text-error-700' },
 };
 
-export function SkillGap({ resumeHistory, setViewMode }) {
-  const latestResume = resumeHistory?.[0] || null;
+export function SkillGap({ activeAnalysis, resumeHistory, setViewMode }) {
+  const latestResume = activeAnalysis || resumeHistory?.[0] || null;
   const technicalSkills = latestResume?.technical_skills || [];
   const missingSkills = latestResume?.missing_skills || [];
   const softSkills = latestResume?.soft_skills || [];

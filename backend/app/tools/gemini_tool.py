@@ -125,18 +125,22 @@ def generate_local_resume_analysis(prompt: str) -> dict:
         "resume_score": 75,
         "ats_score": 72,
         "ai_explanation": "This is a local analysis. Your resume has a strong foundation, but can be improved with more quantifiable metrics and cleaner formatting for better ATS parsing.",
-        "confidence_score": 0.8,
+        "confidence_score": 80,
         "roadmap": [
-            {"step": 1, "description": "Review and refine your bullet points to include specific outcomes (e.g. 'increased sales by 20%').", "status": "pending"},
-            {"step": 2, "description": "Ensure your formatting is single-column and easily parsable.", "status": "pending"},
-            {"step": 3, "description": "Update your LinkedIn profile to match your updated resume.", "status": "pending"},
-            {"step": 4, "description": "Start a new portfolio project to demonstrate your latest skills.", "status": "pending"},
-            {"step": 5, "description": "Practice mock interviews focusing on behavioral questions.", "status": "pending"},
-            {"step": 6, "description": "Begin active networking and applying to targeted roles.", "status": "pending"}
+            "Phase 1: Review and refine your bullet points to include specific outcomes (e.g. 'increased sales by 20%').",
+            "Phase 2: Ensure your formatting is single-column and easily parsable.",
+            "Phase 3: Update your LinkedIn profile to match your updated resume.",
+            "Phase 4: Start a new portfolio project to demonstrate your latest skills.",
+            "Phase 5: Practice mock interviews focusing on behavioral questions.",
+            "Phase 6: Begin active networking and applying to targeted roles."
         ],
-        "recommended_roles": ["Software Engineer", "Data Analyst", "Product Manager"],
+        "recommended_roles": [
+            {"title": "Software Engineer", "salary_range": "$90,000 - $140,000", "match_percentage": 85},
+            {"title": "Data Analyst", "salary_range": "$70,000 - $100,000", "match_percentage": 80},
+            {"title": "Product Manager", "salary_range": "$95,000 - $150,000", "match_percentage": 75}
+        ],
         "recommended_certifications": [
-            {"name": "AWS Certified Cloud Practitioner", "url": "https://aws.amazon.com/certification/", "type": "Cloud"}
+            {"name": "AWS Certified Cloud Practitioner", "provider": "Amazon Web Services", "difficulty": "Beginner"}
         ],
         "learning_resources": [
             {"title": "Harvard CS50", "url": "https://cs50.harvard.edu/", "type": "Course"}

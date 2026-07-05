@@ -5,7 +5,7 @@ import "./Auth.css";
 
 /**
  * Login view component for CareerPilot AI.
- * Handles Email/Password authenticate and Google OAuth flows.
+ * Handles Email/Password authentication and Google OAuth flows.
  */
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -18,8 +18,6 @@ export const Login = () => {
 
   /**
    * Handle Login form submission.
-   * 
-   * @param {React.FormEvent} e 
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,7 +48,7 @@ export const Login = () => {
 
     try {
       await loginWithGoogle();
-      navigate("/");
+      navigate("/dashboard");
     } catch (err) {
       setError(err.message || "Failed to log in with Google.");
     } finally {

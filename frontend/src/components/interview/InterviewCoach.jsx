@@ -8,7 +8,7 @@ import InterviewReport from './InterviewReport';
 const TOTAL_QUESTIONS = 4;
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-const InterviewCoach = ({ refreshHistory }) => {
+const InterviewCoach = ({ currentUser, refreshHistory }) => {
   const [phase, setPhase] = useState('setup'); // setup, active, report
   const [loading, setLoading] = useState(false);
   
@@ -30,7 +30,7 @@ const InterviewCoach = ({ refreshHistory }) => {
     setLoading(true);
 
     try {
-      const activeUser = auth.currentUser;
+      const activeUser = currentUser || auth.currentUser;
       const token = activeUser ? await activeUser.getIdToken() : "";
       
       const res = await fetch(API_URL + "/interview/start", {
@@ -60,7 +60,7 @@ const InterviewCoach = ({ refreshHistory }) => {
     const updatedHistory = [...history, { question: currentQuestion, answer: userAnswer, score: 0 }];
     
     try {
-      const activeUser = auth.currentUser;
+      const activeUser = currentUser || auth.currentUser;
       const token = activeUser ? await activeUser.getIdToken() : "";
 
       const res = await fetch(API_URL + "/interview/evaluate", {
@@ -101,7 +101,7 @@ const InterviewCoach = ({ refreshHistory }) => {
 
   const fetchReport = async (finalHistory) => {
     try {
-      const activeUser = auth.currentUser;
+      const activeUser = currentUser || auth.currentUser;
       const token = activeUser ? await activeUser.getIdToken() : "";
 
       const res = await fetch(API_URL + "/interview/complete", {

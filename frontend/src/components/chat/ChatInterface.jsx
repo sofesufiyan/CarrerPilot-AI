@@ -51,7 +51,11 @@ const ChatInterface = ({
   messagesEndRef,
   question,
   setQuestion,
-  handleKeyDown
+  handleKeyDown,
+  conversations = [],
+  currentConversationId,
+  loadConversation,
+  resetChat
 }) => {
 
   const handleSendClick = () => {
@@ -66,8 +70,8 @@ const ChatInterface = ({
       <div className="hidden xl:flex flex-col w-72 border-r border-ink-200/70 bg-white shrink-0">
         <div className="p-4 border-b border-ink-200/70">
           <button 
-            onClick={() => setQuestion('')}
-            className="w-full inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all duration-200 bg-primary-600 text-white px-4 py-2.5 hover:bg-primary-700 active:scale-[0.98] shadow-sm hover:shadow-glow"
+            onClick={resetChat}
+            className="w-full inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all duration-200 bg-primary-600 text-white px-4 py-2.5 hover:bg-primary-700 active:scale-[0.98] shadow-sm hover:shadow-glow text-sm cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             New Conversation
@@ -75,21 +79,21 @@ const ChatInterface = ({
         </div>
         <div className="flex-1 overflow-y-auto scrollbar-thin p-2 space-y-1">
           <p className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-ink-400">Recent Chats</p>
-          {[
-            { title: messages.length > 1 ? messages[1]?.content?.substring(0, 30) + '...' : 'Career Copilot Session', active: true },
-            { title: 'Resume Review Advice', active: false },
-            { title: 'System Design Study Plan', active: false },
-          ].map((c, i) => (
-            <button
-              key={i}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-ink-600 font-medium transition-all duration-200 w-full text-left cursor-pointer ${
-                c.active ? 'bg-primary-50 text-primary-700' : 'hover:bg-ink-100 hover:text-ink-900'
-              }`}
-            >
-              <MessageSquare className="w-4 h-4 text-ink-400" />
-              <span className="text-sm truncate">{c.title}</span>
-            </button>
-          ))}
+          {conversations.map((c) => {
+            const isActive = c.id === currentConversationId;
+            return (
+              <button
+                key={c.id}
+                onClick={() => loadConversation(c.id)}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-ink-600 font-medium transition-all duration-200 w-full text-left cursor-pointer ${
+                  isActive ? 'bg-primary-50 text-primary-700' : 'hover:bg-ink-100 hover:text-ink-900'
+                }`}
+              >
+                <MessageSquare className="w-4 h-4 text-ink-400" />
+                <span className="text-sm truncate">{c.title}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

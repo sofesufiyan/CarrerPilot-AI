@@ -13,8 +13,8 @@ const SkillGap = lazy(() => import("./components/dashboard/SkillGap"));
 import Sidebar from "./components/layout/Sidebar";
 const ResumeAnalysis = lazy(() => import("./components/dashboard/ResumeAnalysis"));
 import ChatInterface from "./components/chat/ChatInterface";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import { Login } from "./pages/Login";
+import { Signup } from "./pages/Signup";
 import Landing from "./pages/Landing";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -32,6 +32,34 @@ function MainLayout() {
   ]);
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+
+  const [conversations, setConversations] = useState([
+    { id: "default-session", title: "Career Copilot Session", messages: [
+      {
+        id: "welcome-msg",
+        sender: "ai",
+        text: "Hi! I'm CareerPilot AI, your personal career mentor. How can I help you build your dream career today?",
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        type: "text",
+      }
+    ]}
+  ]);
+  const [currentConversationId, setCurrentConversationId] = useState("default-session");
+
+  const loadConversation = (id) => {
+    const activeMessages = [...messages];
+    const activeId = currentConversationId;
+    setConversations(prev => {
+      const title = activeMessages.length > 1 ? activeMessages[1]?.text?.substring(0, 30) + '...' : 'Career Copilot Session';
+      return prev.map(c => c.id === activeId ? { ...c, title, messages: activeMessages } : c);
+    });
+
+    const target = conversations.find(c => c.id === id);
+    if (target) {
+      setCurrentConversationId(id);
+      setMessages(target.messages);
+    }
+  };
   
   // Resume Intelligence Engine State (Version 1.0)
   const [resumeHistory, setResumeHistory] = useState([]);
@@ -272,6 +300,31 @@ function MainLayout() {
   };
 
   const resetChat = () => {
+    const activeMessages = [...messages];
+    const activeId = currentConversationId;
+    const newId = crypto.randomUUID();
+    setCurrentConversationId(newId);
+
+    setConversations(prev => {
+      const title = activeMessages.length > 1 ? activeMessages[1]?.text?.substring(0, 30) + '...' : 'Career Copilot Session';
+      const exists = prev.some(c => c.id === activeId);
+      let updated = [];
+      if (exists) {
+        updated = prev.map(c => c.id === activeId ? { ...c, title, messages: activeMessages } : c);
+      } else {
+        updated = [...prev, { id: activeId, title, messages: activeMessages }];
+      }
+      return [...updated, { id: newId, title: "New Conversation", messages: [
+        {
+          id: "welcome-msg",
+          sender: "ai",
+          text: "Hi! I'm CareerPilot AI, your personal career mentor. How can I help you build your dream career today?",
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          type: "text",
+        }
+      ]}];
+    });
+
     setMessages([
       {
         id: "welcome-msg",
@@ -282,14 +335,9 @@ function MainLayout() {
       },
     ]);
     setQuestion("");
-    setAgentLogs([]);
     setLoading(false);
     setCopiedId(null);
     setViewMode("chat");
-    setTimeout(() => {
-      const textarea = document.querySelector('.floating-chat-box textarea');
-      if (textarea) textarea.focus();
-    }, 100);
   };
 
   const isChatEmpty = messages.length <= 1;
@@ -358,22 +406,22 @@ function MainLayout() {
             />
           ) : viewMode === "roadmap" ? (
             <Suspense fallback={<div className="lazy-loader">Loading Roadmap...</div>}>
-              <Roadmap resumeHistory={resumeHistory} setViewMode={setViewMode} />
+              <Roadmap activeAnalysis={activeAnalysis} resumeHistory={resumeHistory} setViewMode={setViewMode} />
             </Suspense>
           ) : viewMode === "skillgap" ? (
             <Suspense fallback={<div className="lazy-loader">Loading Skill Gap Analysis...</div>}>
-              <SkillGap resumeHistory={resumeHistory} setViewMode={setViewMode} />
+              <SkillGap activeAnalysis={activeAnalysis} resumeHistory={resumeHistory} setViewMode={setViewMode} />
             </Suspense>
           ) : viewMode === "interview" ? (
             <Suspense fallback={<div className="lazy-loader">Loading Interview Coach...</div>}>
-              <InterviewCoach refreshHistory={fetchInterviewHistory} />
+              <InterviewCoach currentUser={currentUser} refreshHistory={fetchInterviewHistory} />
             </Suspense>
           ) : viewMode === "chat" ? (
             /* ========================================================= */
             /* 1. CHAT MENTOR VIEW                                       */
             /* ========================================================= */
             <>
-            <ChatInterface
+             <ChatInterface
               messages={messages}
               isChatEmpty={isChatEmpty}
               loading={loading}
@@ -384,6 +432,10 @@ function MainLayout() {
               question={question}
               setQuestion={setQuestion}
               handleKeyDown={handleKeyDown}
+              conversations={conversations}
+              currentConversationId={currentConversationId}
+              loadConversation={loadConversation}
+              resetChat={resetChat}
             />
           </>
           ) : (

@@ -8,22 +8,8 @@ import {
   logout 
 } from "../services/AuthService";
 
-// Create React Context for Firebase Authentication state
 const AuthContext = createContext(null);
 
-/**
- * Custom React Hook to consume the authentication context.
- * Throws an error if used outside an AuthProvider wrapper.
- * 
- * @returns {{
- *   currentUser: import("firebase/auth").User | null,
- *   loading: boolean,
- *   signUp: Function,
- *   login: Function,
- *   loginWithGoogle: Function,
- *   logout: Function
- * }} Context properties
- */
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -32,18 +18,15 @@ export const useAuth = () => {
   return context;
 };
 
-/**
- * Provider component that listens to authentication changes and exposes the session state.
- * 
- * @param {Object} props
- * @param {React.ReactNode} props.children
- */
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState({ uid: "test-user-e2e", email: "e2e@careerpilot.ai" });
-  const [loading, setLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = () => {};
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      setLoading(false);
+    });
     return () => unsubscribe();
   }, []);
 
@@ -58,7 +41,6 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {/* Block child rendering until Firebase SDK finishes initialization */}
       {!loading && children}
     </AuthContext.Provider>
   );

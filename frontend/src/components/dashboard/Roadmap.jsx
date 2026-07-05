@@ -7,8 +7,8 @@ const statusConfig = {
   locked: { ring: 'border-ink-200 bg-ink-50', icon: Lock, iconColor: 'text-ink-400', label: 'Locked', labelColor: 'bg-ink-100 text-ink-500' },
 };
 
-export function Roadmap({ resumeHistory, setViewMode }) {
-  const latestResume = resumeHistory?.[0] || null;
+export function Roadmap({ activeAnalysis, resumeHistory, setViewMode }) {
+  const latestResume = activeAnalysis || resumeHistory?.[0] || null;
   const rawRoadmap = latestResume?.roadmap || [];
 
   const handleUploadResumeClick = () => {
