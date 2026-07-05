@@ -90,53 +90,53 @@ The application is designed to help students and professionals make informed car
                      AI Generated Results
 ```
 
-## 📸 Project Screenshots
+# 📸 Project Screenshots
 
-### 🏠 Landing Page
+## 🏠 Landing Page
 
-> *(Screenshot Coming Soon)*
-
----
-
-### 🔐 Login Page
-
-> *(Screenshot Coming Soon)*
+![Landing Page](screenshots/landing-page.png)
 
 ---
 
-### 📊 Dashboard
+## 🔐 Login Page
 
-> *(Screenshot Coming Soon)*
-
----
-
-### 📄 Resume Analysis
-
-> *(Screenshot Coming Soon)*
+![Login Page](screenshots/login-page.png)
 
 ---
 
-### 🤖 AI Career Mentor
+## 📊 Dashboard
 
-> *(Screenshot Coming Soon)*
-
----
-
-### 🛣️ Learning Roadmap
-
-> *(Screenshot Coming Soon)*
+![Dashboard](screenshots/dashboard.png)
 
 ---
 
-### 🎯 Skill Gap Analysis
+## 📄 Resume Analysis
 
-> *(Screenshot Coming Soon)*
+![Resume Analysis](screenshots/resume-analysis.png)
 
 ---
 
-### 💼 Interview Coach
+## 🤖 AI Career Mentor
 
-> *(Screenshot Coming Soon)*
+![AI Mentor](screenshots/ai-mentor.png)
+
+---
+
+## 🛣️ Learning Roadmap
+
+![Learning Roadmap](screenshots/roadmap.png)
+
+---
+
+## 🎯 Skill Gap Analysis
+
+![Skill Gap Analysis](screenshots/skill-gap.png)
+
+---
+
+## 💼 Interview Coach
+
+![Interview Coach](screenshots/interview-coach.png)
 
 ## 🚀 Installation
 
