@@ -1,28 +1,46 @@
 def choose_agent(question: str) -> str:
     """
     Classify the student's question and return the chosen agent key.
-    Allowed keys: career, resume, roadmap, interview, skillgap
+
+    Allowed keys:
+    - career
+    - resume
+    - roadmap
+    - interview
+    - skillgap
     """
+
     question = question.lower().strip()
 
-    # ==========================
+    # ==========================================
     # Resume Expert
-    # ==========================
-    if any(word in question for word in [
-        "resume",
-        "cv",
-        "ats",
-        "resume review",
-        "improve resume",
-        "resume analysis"
-    ]):
+    # Only for explicit resume analysis requests
+    # ==========================================
+    resume_phrases = [
+        "analyze my resume",
+        "analyse my resume",
+        "review my resume",
+        "review my cv",
+        "resume analysis",
+        "resume scan",
+        "ats score",
+        "score my resume",
+        "upload resume",
+        "upload my resume",
+        "review resume",
+        "scan my resume",
+        "check my resume",
+        "evaluate my resume",
+    ]
+
+    if any(phrase in question for phrase in resume_phrases):
         print("📄 Selected Agent: Resume Expert")
         return "resume"
 
-    # ==========================
+    # ==========================================
     # Learning Planner
-    # ==========================
-    if any(word in question for word in [
+    # ==========================================
+    roadmap_keywords = [
         "roadmap",
         "plan",
         "learning path",
@@ -30,43 +48,50 @@ def choose_agent(question: str) -> str:
         "learning roadmap",
         "career roadmap",
         "how to learn",
-        "how should i start"
-    ]):
+        "how should i start",
+    ]
+
+    if any(keyword in question for keyword in roadmap_keywords):
         print("🗺️ Selected Agent: Learning Planner")
         return "roadmap"
 
-    # ==========================
+    # ==========================================
     # Interview Coach
-    # ==========================
-    if any(word in question for word in [
+    # ==========================================
+    interview_keywords = [
         "interview",
         "mock interview",
         "technical interview",
         "hr interview",
         "placement",
         "interview questions",
-        "prepare for interview"
-    ]):
+        "prepare for interview",
+    ]
+
+    if any(keyword in question for keyword in interview_keywords):
         print("🎤 Selected Agent: Interview Coach")
         return "interview"
 
-    # ==========================
-    # Skills Advisor
-    # ==========================
-    if any(word in question for word in [
+    # ==========================================
+    # Skill Gap Advisor
+    # ==========================================
+    skill_keywords = [
         "skill gap",
-        "skills",
         "missing skills",
         "skill analysis",
         "analyze my skills",
+        "analyse my skills",
         "improve my skills",
-        "what skills"
-    ]):
-        print("📊 Selected Agent: Skills Advisor")
+        "what skills",
+        "skill assessment",
+    ]
+
+    if any(keyword in question for keyword in skill_keywords):
+        print("📊 Selected Agent: Skill Gap Advisor")
         return "skillgap"
 
-    # ==========================
+    # ==========================================
     # Career Mentor (Default)
-    # ==========================
+    # ==========================================
     print("🚀 Selected Agent: Career Mentor")
     return "career"
