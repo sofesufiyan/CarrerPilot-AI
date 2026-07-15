@@ -232,7 +232,7 @@ CareerPilot-AI/
 │   │   └── App.jsx
 │   │
 │   ├── public/
-│   └── package.json
+│   └── 
 │
 ├── docs/
 ├── screenshots/
