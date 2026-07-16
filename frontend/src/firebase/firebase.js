@@ -13,7 +13,7 @@ const firebaseConfig = {
 };
 
 // Initialize the Firebase App instance
-const app = initializeApp(firebaseConfig);
+const app = console.log("Firebase Config:", firebaseConfig);
 
 // Initialize Firebase Authentication client
 export const auth = getAuth(app);
