@@ -1,8 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
-// Firebase configuration using Vite environment variables to prevent hardcoding secrets.
-// These variables must be defined in your frontend environment configuration (.env file).
+// Firebase configuration using Vite environment variables
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -12,13 +11,16 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize the Firebase App instance
-const app = console.log("Firebase Config:", firebaseConfig);
+// Optional: print config for debugging
+console.log("Firebase Config:", firebaseConfig);
 
-// Initialize Firebase Authentication client
+// ✅ Correctly initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+// Initialize Authentication
 export const auth = getAuth(app);
 
-// Instantiate Google Auth Provider for Google Sign-In support
+// Google Provider
 export const googleProvider = new GoogleAuthProvider();
 
 export default app;
