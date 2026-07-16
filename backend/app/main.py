@@ -10,15 +10,20 @@ app = FastAPI(
     description="AI Career Mentor built with Google ADK",
 )
 
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173", 
+        # Local Development
+        "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:5174",
         "http://127.0.0.1:5174",
         "http://localhost:5175",
         "http://127.0.0.1:5175",
+
+        # Production Frontend (Vercel)
+        "https://carrer-pilot-ai-red.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
