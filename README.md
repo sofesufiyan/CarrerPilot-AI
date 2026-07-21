@@ -94,49 +94,48 @@ The application is designed to help students and professionals make informed car
 
 ## 🏠 Landing Page
 
-![Landing Page](screenshots/landing-page.png)
-
+![Login Page](frontend/screenshots/login-page.png)
 ---
 
 ## 🔐 Login Page
 
-![Login Page](screenshots/login-page.png)
+![Login Page](frontend/screenshots/login-page.png)
 
 ---
 
 ## 📊 Dashboard
 
-![Dashboard](screenshots/dashboard.png)
+![Dashboard](frontend/screenshots/dashboard.png)
 
 ---
 
 ## 📄 Resume Analysis
 
-![Resume Analysis](screenshots/resume-analysis.png)
+![Resume Analysis](frontend/screenshots/resume-analysis.png)
 
 ---
 
 ## 🤖 AI Career Mentor
 
-![AI Mentor](screenshots/ai-mentor.png)
+![AI Mentor](frontend/screenshots/ai-mentor.png)
 
 ---
 
 ## 🛣️ Learning Roadmap
 
-![Learning Roadmap](screenshots/roadmap.png)
+![Learning Roadmap](frontend/screenshots/roadmap.png)
 
 ---
 
 ## 🎯 Skill Gap Analysis
 
-![Skill Gap Analysis](screenshots/skill-gap.png)
+![Skill Gap Analysis](frontend/screenshots/skill-gap.png)
 
 ---
 
 ## 💼 Interview Coach
 
-![Interview Coach](screenshots/interview-coach.png)
+![Interview Coach](frontend/screenshots/interview-coach.png)
 
 ## 🚀 Installation
 
