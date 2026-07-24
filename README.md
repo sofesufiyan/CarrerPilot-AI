@@ -1,6 +1,28 @@
 # 🚀 CareerPilot AI
 
-> An AI-powered career guidance platform that helps students and job seekers analyze resumes, identify skill gaps, receive personalized career advice, generate learning roadmaps, and prepare for interviews using Generative AI.
+<p align="center">
+  <strong>
+    AI-powered Career Guidance Platform that analyzes resumes, identifies skill gaps,
+    recommends career paths, generates personalized learning roadmaps,
+    and prepares students for interviews using Google Gemini AI.
+  </strong>
+</p>
+
+<p align="center">
+  <a href="https://carrer-pilot-ai-red.vercel.app" target="_blank">
+    <img src="https://img.shields.io/badge/🚀%20Live%20Demo-Visit%20Now-blue?style=for-the-badge" alt="Live Demo">
+  </a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react" alt="React">
+  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase" alt="Firebase">
+  <img src="https://img.shields.io/badge/Gemini-AI-blue?style=for-the-badge" alt="Gemini AI">
+  <img src="https://img.shields.io/badge/Vercel-black?style=for-the-badge&logo=vercel" alt="Vercel">
+  <img src="https://img.shields.io/badge/Render-46E3B7?style=for-the-badge" alt="Render">
+</p>
 
 ---
 
